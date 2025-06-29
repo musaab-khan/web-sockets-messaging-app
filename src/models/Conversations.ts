@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 const { Schema } = mongoose;
 
-const chatSchema = new Schema({
+const conversationSchema = new Schema({
   name: {
     type: String,
     trim: true,
@@ -21,4 +21,4 @@ const chatSchema = new Schema({
   }
 }, { timestamps: true });
 
-export default mongoose.model('Chat', chatSchema);
+export default mongoose.model('Chat', conversationSchema);
