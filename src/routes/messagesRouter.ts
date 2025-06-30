@@ -1,11 +1,12 @@
 import {Router} from 'express';
-import messageController from '../controllers/messageController';
-import printRequest from '../middleware/test';
+import MessageController from '../controllers/MessageController';
+import authenticateToken from '../middleware/authenticateToken';
 
 const router = Router();
+router.use(authenticateToken);
 
-router.post("/new", printRequest, messageController.createMessage);
-router.post("/get_messages", printRequest, messageController.getMessage);
+router.post("/new", MessageController.createMessage);
+router.post("/get_messages", MessageController.getMessages);
 
 export default router;
 

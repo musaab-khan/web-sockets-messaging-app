@@ -1,14 +1,13 @@
 import {Request, Response} from 'express';
 import ValidationHelper from "../helpers/validations/ValidationHelper";
-import Friends from "../models/Friends";
+import Friends from "../models/Friend";
 import mongoose from "mongoose";
 
-class friendController{
+class FriendController{
     async newRequest( req: Request, res: Response ){
         try{
             const validationRules = {
-                requester: 'number|required',
-                recipient: 'number|required'
+                recipient_id: 'number|required'
             };
 
             const validationResult = ValidationHelper.validateRequest(req, validationRules);
@@ -16,16 +15,14 @@ class friendController{
                 return res.status(400).json(validationResult);
             }
 
-            const { requester, recipient } =req.body;
-            const [userA, userB] = requester < recipient 
-                                                    ? [requester, recipient]
-                                                    : [recipient, requester];
-
+            const requester_id = req.userId
+            const { recipient_id } =req.body;
+            const [userA, userB] = requester_id < recipient_id ? [requester_id, recipient_id] : [recipient_id, requester_id];
             const newFriendRequest = await Friends.create({
-            user1: userA,
-            user2: userB,
-            sent_by: requester,
-            status: 'pending'
+                user1: userA,
+                user2: userB,
+                sent_by: requester_id,
+                status: 'pending'
             });
 
             res.status(201).send({msg:"Friend request sent", Users: newFriendRequest});
@@ -37,10 +34,7 @@ class friendController{
 
     async pendingRequests( req: Request, res: Response ){
         try{
-            const {user_id} = req.body;
-            if(!user_id){
-                return res.status(400).json({error:"user_id is required"});
-            }
+            const user_id = req.userId;
             const requests = await Friends.find({
                 status: 'pending',
                 $or: [
@@ -85,9 +79,9 @@ class friendController{
 
     async getFriendsList(req: Request, res: Response) {
         try {
-            const { user_id } = req.body;
+            const user_id = req.userId;
 
-            if (!user_id || !mongoose.Types.ObjectId.isValid(user_id)) {
+            if (!mongoose.Types.ObjectId.isValid(user_id)) {
             return res.status(400).json({ error: "Invalid or missing user_id" });
             }
 
@@ -99,17 +93,17 @@ class friendController{
             ]
             }).populate('user1 user2', 'user_name email');
 
-            const formatted = friends.map(f => {
-            const friendUser = f.user1._id.toString() === user_id
-                ? f.user2
-                : f.user1  as any;
-                return {
-                    _id: friendUser._id,
-                    name: friendUser.user_name,
-                    email: friendUser.email,
-                    friendship_id: f._id
-                };
-            });
+            const formatted = friends.map(
+                f => {
+                    const friendUser = f.user1._id.toString() === user_id ? f.user2 : f.user1  as any;
+                    return {
+                        _id: friendUser._id,
+                        name: friendUser.user_name,
+                        email: friendUser.email,
+                        friendship_id: f._id
+                    };
+                }
+            );
 
             return res.status(200).json({ friends: formatted });
         }
@@ -118,7 +112,6 @@ class friendController{
             return res.status(500).json({ error: err.message || err });
         }
 }
-
 }
 
-export default new friendController();
+export default new FriendController();

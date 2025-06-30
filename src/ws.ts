@@ -1,12 +1,12 @@
 import http from 'http';
 import WebSocket, { WebSocketServer } from 'ws';
-import Messages from './models/Messages.js';
+import Messages from './models/Message.js';
 import dotenv from 'dotenv';
-import Conversation from './models/Conversations.js';
+import Conversation from './models/Conversation.js';
 
 dotenv.config();
 
-export const userSocketMap = new Map(); // user_id → WebSocket
+export const userSocketMap = new Map();
 
 export function setupWebSocket(app) {
   const server = http.createServer(app);

@@ -1,5 +1,5 @@
 import { Request } from 'express';
-import Joi, { AnySchema, StringSchema, NumberSchema } from 'joi';
+import Joi, { AnySchema, StringSchema, NumberSchema, ArraySchema, } from 'joi';
  
 interface ValidationRule {
   [key: string]: string;
@@ -39,7 +39,7 @@ export class ValidationHelper {
         ruleArray.forEach(rule => {
           if (rule === 'required') {
             joiSchema = joiSchema.required();
-          } else if (rule === 'string' || rule === 'integer' || rule === 'boolean' || rule === 'email' || rule === 'Array') {
+          } else if (rule === 'string' || rule === 'integer' || rule === 'boolean' || rule === 'email' || rule === 'array') {
             // no-op
           } else if (rule.startsWith('min:')) {
             const minValue = parseInt(rule.split(':')[1]);
@@ -47,6 +47,8 @@ export class ValidationHelper {
               joiSchema = (joiSchema as StringSchema).min(minValue);
             } else if (joiSchema.type === 'number') {
               joiSchema = (joiSchema as NumberSchema).min(minValue);
+            } else if (joiSchema.type === 'array') {
+              joiSchema = (joiSchema as ArraySchema).min(minValue);
             }
           } else if (rule.startsWith('max:')) {
             const maxValue = parseInt(rule.split(':')[1]);
@@ -54,6 +56,8 @@ export class ValidationHelper {
               joiSchema = (joiSchema as StringSchema).max(maxValue);
             } else if (joiSchema.type === 'number') {
               joiSchema = (joiSchema as NumberSchema).max(maxValue);
+            } else if (joiSchema.type === 'array') {
+              joiSchema = (joiSchema as ArraySchema).max(maxValue);
             }
           } else if (rule.startsWith('in:')) {
             const values = rule.split(':')[1].split(',');

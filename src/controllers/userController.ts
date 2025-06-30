@@ -7,8 +7,8 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-class userController{
-    async create(req:Request, res:Response){
+class UserController{
+    async create( req: Request, res: Response ){
         try{
             const validationRules = {
                 user_name: 'string|required|min:3|max:30',
@@ -30,14 +30,13 @@ class userController{
             });
 
             res.status(201).send({msg:"New user created", Users: newUser});
-
         }
         catch(err){
             res.status(400).send({error:err});
         }
     }
 
-    async login(req:Request, res:Response){
+    async login(req: Request, res: Response){
         try{
             const validationRules = {
                 email: 'string|required|email',
@@ -50,7 +49,6 @@ class userController{
             }
 
             const { email,password } = req.body;
-
             const user = await User.findOne({email});
             if (!user) {
                 return res.status(400).json({ msg: "Incorrect email or password" });
@@ -60,7 +58,8 @@ class userController{
             if (!isPasswordMatch) {
                 return res.status(400).json({ msg: "Incorrect email or password" });
             }
-            const token = jwt.sign({ id: user._id }, process.env.JWT_SIGN_SECRET!, { expiresIn: "1h" });
+
+            const token = jwt.sign({ id: user._id }, process.env.JWT_SIGN_SECRET!, { expiresIn: "12h" });
 
             const userObj = user.toJSON() as Record<string, any>;
             delete userObj.password;
@@ -73,4 +72,4 @@ class userController{
     }
 }
 
-export default new userController();
+export default new UserController();

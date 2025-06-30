@@ -1,16 +1,15 @@
-import Messages from "../models/Messages";
+import Messages from "../models/Message";
 import mongoose from "mongoose";
 import { Request, Response } from "express";
 import ValidationHelper from "../helpers/validations/ValidationHelper";
 import { userSocketMap } from "../ws";
-import Conversations from "../models/Conversations";
+import Conversations from "../models/Conversation";
 
-class messageController {
+class MessageController {
 
     async createMessage(req: Request, res: Response) {
         try {
             const validationRules = {
-                sender_id: "string|required",
                 conversation_id: "string|required",
                 content: "string",
                 attachment: "string"
@@ -21,7 +20,8 @@ class messageController {
                 return res.status(400).json(validationResult);
             }
 
-            const { sender_id, content, conversation_id, attachment } = req.body;
+            const sender_id = req.userId;
+            const { content, conversation_id, attachment } = req.body;
 
             if (!mongoose.Types.ObjectId.isValid(sender_id)) {
                 return res.status(400).json({ error: "Invalid sender_id" });
@@ -56,6 +56,7 @@ class messageController {
                             attachment,
                             createdAt: message.createdAt
                         }));
+                        
                     }
                 }
             });
@@ -68,13 +69,12 @@ class messageController {
         }
     }
 
-    async getMessage(req: Request, res: Response){
+    async getMessages(req: Request, res: Response){
         const {conversation_id} = req.body;
-
         const messages = await Messages.find({conversation_id});
         res.status(200).send({messages:messages});
     }
 
 }
 
-export default new messageController();
+export default new MessageController();

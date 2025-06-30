@@ -2,12 +2,11 @@ import express from 'express';
 import connection from './db/connection';
 import dotenv from 'dotenv';
 import userRouter from './routes/userRouter';
-import friendRouter from './routes/friendsRouter';
-import conversationRouter from './routes/conversationsRouter';
+import friendRouter from './routes/friendRouter';
+import conversationRouter from './routes/conversationRouter';
 import messagesRouter from './routes/messagesRouter';
 import cors from 'cors';
 import {setupWebSocket} from './ws'
-
 
 dotenv.config();
 

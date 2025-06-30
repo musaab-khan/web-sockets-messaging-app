@@ -1,11 +1,10 @@
 import {Router} from 'express';
-import userController from '../controllers/userController';
-import printRequest from '../middleware/test';
+import UserController from '../controllers/UserController';
 
 const router = Router();
 
-router.post("/signup", printRequest, userController.create);
-router.post("/login", printRequest, userController.login);
+router.post("/signup", UserController.create);
+router.post("/login", UserController.login);
 
 export default router;
 
