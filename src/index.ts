@@ -1,16 +1,24 @@
 import express from 'express';
 import connection from './db/connection';
 import dotenv from 'dotenv';
-import userRouter from './routes/userRouter'
-import friendRouter from './routes/friendsRouter'
+import userRouter from './routes/userRouter';
+import friendRouter from './routes/friendsRouter';
+import conversationRouter from './routes/conversationsRouter';
+import messagesRouter from './routes/messagesRouter';
+import cors from 'cors';
+import {setupWebSocket} from './ws'
+
 
 dotenv.config();
 
 const app = express();
+app.use(cors());
 app.use(express.json());
 
 app.use('/users',userRouter);
 app.use('/friends',friendRouter);
+app.use('/conversations',conversationRouter);
+app.use('/messages',messagesRouter);
 
 const PORT = process.env.PORT || 5000;
 
@@ -20,4 +28,6 @@ const PORT = process.env.PORT || 5000;
   app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
   });
+
+  setupWebSocket(app);
 })();

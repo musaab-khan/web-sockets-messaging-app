@@ -1,4 +1,3 @@
-import User from "../models/User";
 import {Request, Response} from 'express';
 import ValidationHelper from "../helpers/validations/ValidationHelper";
 import Friends from "../models/Friends";
@@ -43,13 +42,13 @@ class friendController{
                 return res.status(400).json({error:"user_id is required"});
             }
             const requests = await Friends.find({
-                                                    status: 'pending',
-                                                    $or: [
-                                                            { user1: user_id },
-                                                            { user2: user_id }
-                                                        ],
-                                                    sent_by: { $ne: user_id }
-                                                }).populate('user1 user2 sent_by', 'name email');
+                status: 'pending',
+                $or: [
+                        { user1: user_id },
+                        { user2: user_id }
+                    ],
+                sent_by: { $ne: user_id }
+            }).populate('user1 user2 sent_by', 'name email');
 
             res.status(200).json({ requests });
         }
@@ -98,7 +97,7 @@ class friendController{
                 { user1: user_id },
                 { user2: user_id }
             ]
-            }).populate('user1 user2', 'name email');
+            }).populate('user1 user2', 'user_name email');
 
             const formatted = friends.map(f => {
             const friendUser = f.user1._id.toString() === user_id
