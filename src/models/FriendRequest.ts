@@ -1,22 +1,17 @@
 import mongoose from 'mongoose';
 const { Schema } = mongoose;
 
-const friendSchema = new Schema({
-  user_id: {
+const friendRequestSchema = new Schema({
+  sent_by: {
     type: Schema.Types.ObjectId,
     ref: 'User',
     required: true
   },
-  friend_id: {
+  sent_to: {
     type: Schema.Types.ObjectId,
     ref: 'User',
     required: true
   },
-  status: {
-    type: String,
-    enum: ['accepted', 'silenced', 'blocked'],
-    default: 'pending'
-  }
 }, { timestamps: true });
 
-export default mongoose.model('Friends', friendSchema);
+export default mongoose.model('Friend_Resquest', friendRequestSchema);

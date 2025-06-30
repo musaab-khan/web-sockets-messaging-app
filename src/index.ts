@@ -5,6 +5,7 @@ import userRouter from './routes/userRouter';
 import friendRouter from './routes/friendRouter';
 import conversationRouter from './routes/conversationRouter';
 import messagesRouter from './routes/messagesRouter';
+import friendRequestRouter from './routes/friendRequestRouter'
 import cors from 'cors';
 import {setupWebSocket} from './ws'
 
@@ -18,6 +19,7 @@ app.use('/users',userRouter);
 app.use('/friends',friendRouter);
 app.use('/conversations',conversationRouter);
 app.use('/messages',messagesRouter);
+app.use('/friend_requests',friendRequestRouter);
 
 const PORT = process.env.PORT || 5000;
 

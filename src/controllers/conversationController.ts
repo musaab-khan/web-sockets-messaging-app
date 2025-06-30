@@ -4,7 +4,6 @@ import { Request, Response } from 'express';
 import ValidationHelper from "../helpers/validations/ValidationHelper";
 
 class ConversationController {
-
     async newConversation(req: Request, res: Response) {
         try {
             const validationRules = {
@@ -28,6 +27,7 @@ class ConversationController {
             if (!Array.isArray(recipient_ids) || recipient_ids.length === 0) {
                 return res.status(400).json({ error: "recipient_ids must be a non-empty array" });
             }
+
             const invalidIds = recipient_ids.filter((id: string) => !mongoose.Types.ObjectId.isValid(id));
             if (invalidIds.length > 0) {
                 return res.status(400).json({ error: `Invalid recipient_id(s): ${invalidIds.join(', ')}` });

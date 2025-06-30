@@ -1,8 +1,6 @@
 import http from 'http';
-import WebSocket, { WebSocketServer } from 'ws';
-import Messages from './models/Message.js';
+import { WebSocketServer } from 'ws';
 import dotenv from 'dotenv';
-import Conversation from './models/Conversation.js';
 
 dotenv.config();
 
@@ -21,46 +19,10 @@ export function setupWebSocket(app) {
       ws.close();
       return;
     }
-
     userSocketMap.set(user_id, ws);
     ws.user_id = user_id;
 
     console.log(`User ${user_id} connected via WebSocket`);
-
-    // ws.on('message', async (data) => {
-    //   try {
-    //     const msg = JSON.parse(data);
-
-    //     const saved = await Messages.create({
-    //       sender_id: msg.sender_id,
-    //       content: msg.content,
-    //       conversation_id: msg.conversation_id,
-    //       attachment: msg.attachment || null
-    //     });
-
-    //     const conversation = await Conversation.findById(msg.conversation_id);
-
-    //     if (!conversation || !conversation.members) return;
-
-    //     for (const memberId of conversation.members) {
-    //       if (memberId.toString() !== msg.sender_id) {
-    //         const targetSocket = userSocketMap.get(memberId.toString());
-    //         if (targetSocket && targetSocket.readyState === WebSocket.OPEN) {
-    //           targetSocket.send(JSON.stringify({
-    //             type: 'new_message',
-    //             conversation_id: msg.conversation_id,
-    //             content: msg.content,
-    //             sender_id: msg.sender_id,
-    //             createdAt: saved.createdAt
-    //           }));
-    //         }
-    //       }
-    //     }
-    //   } catch (err) {
-    //     console.error('Error handling message:', err);
-    //     ws.send(JSON.stringify({ error: 'Failed to send message' }));
-    //   }
-    // });
 
     ws.on('close', () => {
       console.log(`User ${user_id} disconnected`);

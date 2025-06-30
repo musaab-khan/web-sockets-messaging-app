@@ -6,7 +6,6 @@ import { userSocketMap } from "../ws";
 import Conversations from "../models/Conversation";
 
 class MessageController {
-
     async createMessage(req: Request, res: Response) {
         try {
             const validationRules = {
@@ -47,7 +46,7 @@ class MessageController {
                 const userId = member.toString();
                 if (userId !== sender_id) {
                     const socket = userSocketMap.get(userId);
-                    if (socket && socket.readyState === 1) { // 1 = OPEN
+                    if (socket && socket.readyState === 1) {
                         socket.send(JSON.stringify({
                             type: "new_message",
                             conversation_id,
