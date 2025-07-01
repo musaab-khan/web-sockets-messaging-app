@@ -1,14 +1,10 @@
 import mongoose from 'mongoose';
 const { Schema } = mongoose;
 
-const conversationSchema = new Schema({
+const groupSchema = new Schema({
   name: {
     type: String,
     trim: true,
-  },
-  isGroup: {
-    type: Boolean,
-    default: false,
   },
   members: [{
     type: Schema.Types.ObjectId,
@@ -21,4 +17,4 @@ const conversationSchema = new Schema({
   }
 }, { timestamps: true });
 
-export default mongoose.model('Conversations', conversationSchema);
+export default mongoose.model('Groups', groupSchema);

@@ -4,6 +4,7 @@ import ValidationHelper from "../helpers/validations/ValidationHelper";
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
+import saveUserFriendsIdsInRedis from '../helpers/redis/saveUserFriendsIdsInRedis'
 
 dotenv.config();
 
@@ -59,12 +60,14 @@ class UserController{
                 return res.status(400).json({ msg: "Incorrect email or password" });
             }
 
-            const token = jwt.sign({ id: user._id }, process.env.JWT_SIGN_SECRET!, { expiresIn: "12h" });
+            const token = jwt.sign({ id: user._id }, "secretkey", { expiresIn: "12h" });
 
             const userObj = user.toJSON() as Record<string, any>;
             delete userObj.password;
             
-            return res.status(200).json({ user: userObj, token: token });
+            res.status(200).json({ user: userObj, token: token });
+
+            saveUserFriendsIdsInRedis(userObj._id);
         }
         catch(err){
             return res.status(400).json({error:err});

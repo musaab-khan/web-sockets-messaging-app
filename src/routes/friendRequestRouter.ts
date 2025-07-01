@@ -7,5 +7,6 @@ router.use(authenticateToken);
 
 router.post('/new',FriendRequestController.creatRequest);
 router.get('/all',FriendRequestController.getRequests);
+router.post('/accept_request',FriendRequestController.acceptRequest);
 
 export default router;

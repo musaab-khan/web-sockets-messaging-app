@@ -1,15 +1,17 @@
-import Messages from "../models/Message";
+import Message from "../models/Message";
 import mongoose from "mongoose";
 import { Request, Response } from "express";
 import ValidationHelper from "../helpers/validations/ValidationHelper";
-import { userSocketMap } from "../ws";
-import Conversations from "../models/Conversation";
+import sendMessage from '../helpers/wss/sendMessage';
+import redis from "../redis";
+import saveUserFriendsIdsInRedis from '../helpers/redis/saveUserFriendsIdsInRedis';
 
 class MessageController {
     async createMessage(req: Request, res: Response) {
+        console.log(req.body);
         try {
             const validationRules = {
-                conversation_id: "string|required",
+                sent_to: "string|required",
                 content: "string",
                 attachment: "string"
             };
@@ -19,49 +21,40 @@ class MessageController {
                 return res.status(400).json(validationResult);
             }
 
-            const sender_id = req.userId;
-            const { content, conversation_id, attachment } = req.body;
+            const sent_by = req.userId;
+            const { content, sent_to, attachment } = req.body;
 
-            if (!mongoose.Types.ObjectId.isValid(sender_id)) {
+            if (!mongoose.Types.ObjectId.isValid(sent_by)) {
                 return res.status(400).json({ error: "Invalid sender_id" });
             }
-
-            if (!mongoose.Types.ObjectId.isValid(conversation_id)) {
-                return res.status(400).json({ error: "Invalid conversation_id" });
+            
+            if (!mongoose.Types.ObjectId.isValid(sent_to)) {
+                return res.status(400).json({ error: "The user who is being sent the message does not exist" });
             }
 
-            const message = await Messages.create({
-                sender_id,
+            const newMessage = await Message.create({
+                sent_by,
+                sent_to,
                 content: content || '',
-                conversation_id,
                 attachment: attachment || null
             });
 
-            const conversation = await Conversations.findById(conversation_id);
-            if (!conversation || !conversation.members) {
-                return res.status(404).json({ error: "Conversation not found" });
+            let raw = await redis.get(sent_by.toString());
+            if (!raw) {
+                await saveUserFriendsIdsInRedis(sent_by);
+                raw = await redis.get(sent_by.toString());
             }
 
-            conversation.members.forEach(member => {
-                const userId = member.toString();
-                if (userId !== sender_id) {
-                    const socket = userSocketMap.get(userId);
-                    if (socket && socket.readyState === 1) {
-                        socket.send(JSON.stringify({
-                            type: "new_message",
-                            conversation_id,
-                            sender_id,
-                            content,
-                            attachment,
-                            createdAt: message.createdAt
-                        }));
-                        
-                    }
-                }
-            });
+            const friendIds = JSON.parse(raw);
+            if (!Array.isArray(friendIds) || !friendIds.includes(sent_to)) {
+                return res.status(401).send({
+                    Error: "The user you're sending the message to is not your friend"
+                });
+            }
+            
+            sendMessage([sent_to], sent_by, newMessage);
 
-
-            return res.status(201).json(message);
+            res.status(201).json(newMessage);
         } catch (err) {
             console.error("Error creating message:", err);
             return res.status(500).json({ error: "Internal Server Error" });
@@ -69,9 +62,25 @@ class MessageController {
     }
 
     async getMessages(req: Request, res: Response){
-        const {conversation_id} = req.body;
-        const messages = await Messages.find({conversation_id});
+        const sent_by = req.userId;
+        const {sent_to} = req.body;
+        const messages = await Message.find({
+            $or: [
+                { sent_by: sent_by, sent_to: sent_to },
+                { sent_by: sent_to, sent_to: sent_by }
+            ]
+        });
         res.status(200).send({messages:messages});
+    }
+    async getAllMessages(req: Request, res: Response){
+        const sent_by = req.userId;
+        const messages = await Message.find({
+            $or: [
+                { sent_by: sent_by},
+                { sent_to: sent_by }
+            ]
+        });
+        res.status(200).send(JSON.stringify(messages));
     }
 
 }

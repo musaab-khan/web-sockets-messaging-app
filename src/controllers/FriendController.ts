@@ -1,79 +1,16 @@
 import {Request, Response} from 'express';
-import ValidationHelper from "../helpers/validations/ValidationHelper";
 import Friends from "../models/Friend";
 import mongoose from "mongoose";
 
 class FriendController{
-    async newRequest( req: Request, res: Response ){
-        try{
-            const validationRules = {
-                recipient_id: 'number|required'
-            };
-
-            const validationResult = ValidationHelper.validateRequest(req, validationRules);
-            if (validationResult) {
-                return res.status(400).json(validationResult);
-            }
-
-            const requester_id = req.userId
-            const { recipient_id } =req.body;
-            const [userA, userB] = requester_id < recipient_id ? [requester_id, recipient_id] : [recipient_id, requester_id];
-            const newFriendRequest = await Friends.create({
-                user1: userA,
-                user2: userB,
-                sent_by: requester_id,
-                status: 'pending'
-            });
-
-            res.status(201).send({msg:"Friend request sent", Users: newFriendRequest});
-        }
-        catch(err){
-            return res.status(400).send({error:err});
-        }
-    }
-
-    async pendingRequests( req: Request, res: Response ){
-        try{
-            const user_id = req.userId;
-            const requests = await Friends.find({
-                status: 'pending',
-                $or: [
-                        { user1: user_id },
-                        { user2: user_id }
-                    ],
-                sent_by: { $ne: user_id }
-            }).populate('user1 user2 sent_by', 'name email');
-
-            res.status(200).json({ requests });
-        }
-        catch(err){
-            return res.status(400).json({error:err});
-        }
-    }
-
-    async acceptRequest(req: Request, res: Response) {
+    async getFriendsIdsFormattedForSavingInRedis(user_id: mongoose.Types.ObjectId) {
         try {
-            const { request_id } = req.body;
-
-            if (!request_id) {
-                return res.status(400).json({ error: "Missing request_id" });
-            }
-
-            const updated = await Friends.findByIdAndUpdate(
-                request_id,
-                { status: 'accepted' },
-                { new: true }
-            );
-
-            if (!updated) {
-            return res.status(404).json({ error: "Friend request not found" });
-            }
-
-            return res.status(200).json({ message: "Friend request accepted", friend: updated });
+            const friends: any = await Friends.find({ user_id });
+            const formatted = friends.map(friend => friend.friend_id.toString());
+            return formatted;
         }
         catch (err) {
-            console.error(err);
-            return res.status(500).json({ error: err.message || err });
+            throw err;
         }
     }
 
@@ -82,30 +19,17 @@ class FriendController{
             const user_id = req.userId;
 
             if (!mongoose.Types.ObjectId.isValid(user_id)) {
-            return res.status(400).json({ error: "Invalid or missing user_id" });
-            }
+                return res.status(400).json({ error: "Invalid or missing user_id" });
+            }       
 
-            const friends = await Friends.find({
-            status: 'accepted',
-            $or: [
-                { user1: user_id },
-                { user2: user_id }
-            ]
-            }).populate('user1 user2', 'user_name email');
+            const friends:any = await Friends.find({user_id}).populate({path: 'friend_id', select: 'user_name email'});
+            const formatted = friends.map(friend => ({
+                friendship_id: friend._id,
+                name: friend.friend_id?.user_name || '',
+                email: friend.friend_id?.email || ''
+            }));
 
-            const formatted = friends.map(
-                f => {
-                    const friendUser = f.user1._id.toString() === user_id ? f.user2 : f.user1  as any;
-                    return {
-                        _id: friendUser._id,
-                        name: friendUser.user_name,
-                        email: friendUser.email,
-                        friendship_id: f._id
-                    };
-                }
-            );
-
-            return res.status(200).json({ friends: formatted });
+            res.status(200).json({ friends: formatted });
         }
         catch (err) {
             console.error(err);
