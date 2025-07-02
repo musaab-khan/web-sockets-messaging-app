@@ -38,23 +38,6 @@ class GroupMessageController {
             if (!group || !group.members) {
                 return res.status(404).json({ error: "Group not found" });
             }
-
-            // group.members.forEach(member => {
-            //     const userId = member.toString();
-            //     if (userId !== sent_by) {
-            //         const socket = userSocketMap.get(userId);
-            //         if (socket && socket.readyState === 1) {
-            //                 socket.send(JSON.stringify({
-            //                         type: "new_message",
-            //                         group_id,
-            //                         sent_by,
-            //                         content,
-            //                         attachment,
-            //                         createdAt: newGroupMessage.createdAt
-            //                 }));   
-            //         }
-            //     }
-            // });
             
             sendMessage(group.members, sent_by, newGroupMessage);
 
@@ -62,6 +45,24 @@ class GroupMessageController {
         } catch (err) {
             console.error("Error creating group message:", err);
             return res.status(500).json({ error: "Internal Server Error" });
+        }
+    }
+
+    async createGroupMessageQueueWorker(message) {
+        try {
+            const { sent_by, content, group_id, attachment } = message;
+            const newGroupMessage = await GroupMessage.create({
+                sent_by,
+                group_id,
+                content: content || '',
+                attachment: attachment || null
+            });
+
+            console.log("Group message saved")
+        } 
+        catch (err) {
+            console.error("Error creating group message:", err);
+            throw(err);
         }
     }
 

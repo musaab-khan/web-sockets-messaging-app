@@ -60,6 +60,25 @@ class MessageController {
             return res.status(500).json({ error: "Internal Server Error" });
         }
     }
+    async createMessageViaQueueWorker(message) {
+        try {
+            const { sent_to,content, sent_by, attachment } = message;
+
+            await Message.create({
+                sent_by,
+                sent_to,
+                content: content || '',
+                attachment: attachment || null
+            });
+
+            console.log("Personal message saved");
+
+        } 
+        catch (err) {
+            console.error("Error creating message:", err);
+            throw(err);
+        }
+    }
 
     async getMessages(req: Request, res: Response){
         const sent_by = req.userId;

@@ -8,7 +8,8 @@ import messagesRouter from './routes/messagesRouter';
 import groupMessageRouter from './routes/groupMessageRouter';
 import friendRequestRouter from './routes/friendRequestRouter'
 import cors from 'cors';
-import {setupWebSocket} from './ws'
+import {setupWebSocket} from './ws';
+import worker from './messageQueueWorker';
 
 dotenv.config();
 
@@ -33,4 +34,5 @@ const PORT = process.env.PORT || 5000;
   });
 
   setupWebSocket(app);
+  worker;
 })();

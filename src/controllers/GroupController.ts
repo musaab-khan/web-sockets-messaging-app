@@ -61,6 +61,11 @@ class GroupController {
             return res.status(500).send({error:err});
         }
     }
+
+    async getMemberIdsFormattedForSavingInRedis(group_id){
+        const group:any = await Group.findById(group_id);
+        return group.members;
+    }
 }
 
 export default new GroupController();
